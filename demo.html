@@ -56,6 +56,7 @@
 			<li><a href="#click-out">Click outside to close</a></li>
 			<li><a href="#animate">Animate open and close</a></li>
 			<li><a href="#force">Force State</a></li>
+			<li><a href="#disableClick">Disable click event on <code>summary</code> element</a></li>
 			<li><a href="#esc">Close by <code>esc</code> key</a></li>
 			<li><a href="#toggle-document-class">Toggle document class</a></li>
 		</ul>
@@ -169,6 +170,17 @@
 				<summary>Close at small, Open at large viewport</summary>
 				<div class="demo-content">
 					<p>This is the content.</p>
+				</div>
+			</details>
+		</details-utils>
+
+		<h2 id="disableClick">Disable Summary Click</h2>
+		<details-utils force-open="(min-width: 1180px)" click-restore click-disable="(min-width: 1180px)">
+			Has <code>click-disable="(max-width: 1180px)"</code> (with <code>click-restore</code>)</p>
+			<details style="color: blue">
+				<summary>Disable click event only at large viewport</summary>
+				<div class="demo-content">
+					<p>Magna minim veniam tempor nostrud id veniam eu aliqua culpa aliqua amet voluptate ad. Duis aliquip ullamco irure dolore reprehenderit in ut magna aliquip qui nostrud excepteur consequat velit. Dolore dolore in ad pariatur fugiat cillum non magna. Elit mollit enim Lorem cillum pariatur non laborum elit eiusmod do eu. Do dolore Lorem ipsum. Ut ut quis dolor ullamco cillum ullamco sunt. Id id pariatur eiusmod cupidatat ullamco tempor cupidatat sunt ea sint quis amet velit commodo. Eu mollit mollit qui. Fugiat dolore officia anim quis esse culpa adipisicing labore fugiat. Excepteur anim nostrud velit mollit esse consectetur voluptate sint aliqua.</p>
 				</div>
 			</details>
 		</details-utils>

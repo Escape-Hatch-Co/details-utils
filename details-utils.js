@@ -211,6 +211,118 @@ class DetailsUtilsAnimateDetails {
 	}
 }
 
+class DetailsUtilsClickable {
+	constructor(detail, options = {}) {
+		this.options = Object.assign({
+			clickEnable: false,
+			clickDisable: false,
+			clickRestore: true,
+		}, options);
+
+		this.detail = detail;
+		this.summary = detail.querySelector(":scope > summary");
+		this._previousStates = {};
+		this.clickable = true;
+	}
+
+	getMatchMedia(el, mq) {
+		if(!el) return;
+		if(mq && mq === true) {
+			return {
+				matches: true
+			};
+		}
+
+		if(mq && "matchMedia" in window) {
+			return window.matchMedia(mq);
+		}
+	}
+
+	// warning: no error checking if the open/close media queries are configured wrong and overlap in weird ways
+	init() {
+		let clickEnableMatchMedia = this.getMatchMedia(this.detail, this.options.clickEnable);
+		let clickDisableMatchMedia = this.getMatchMedia(this.detail, this.options.clickDisable);
+	
+		// When both enable-click and disable-click are valid, it toggles state
+		if( clickEnableMatchMedia && clickEnableMatchMedia.matches && clickDisableMatchMedia && clickDisableMatchMedia.matches ) {
+			this.setState(!this.clickable);
+		} else {
+			if( clickEnableMatchMedia && clickEnableMatchMedia.matches ) {
+				this.setState(true);
+			}
+
+			if( clickDisableMatchMedia && clickDisableMatchMedia.matches ) {
+				this.setState(false);
+			}
+		}
+
+		this.addListener(clickEnableMatchMedia, "for-click-enable");
+		this.addListener(clickDisableMatchMedia, "for-click-disable");
+	}
+
+	addListener(matchmedia, type) {
+		if(!matchmedia || !("addListener" in matchmedia)) {
+			return;
+		}
+
+		// Force stated based on click-enable/click-close attribute value in a media query listener
+		matchmedia.addListener(e => {
+			if(e.matches) {
+				this._previousStates[type] = this.clickable;
+				if(this.clickable !== (type === "for-click-enable")) {
+					this.setState(type === "for-click-enable");
+				}
+			} else {
+				if(this.options.clickRestore && this._previousStates[type] !== undefined) {
+					if(this.clickable !== this._previousStates[type]) {
+						this.setState(this._previousStates[type]);
+					}
+				}
+			}
+		});
+	}
+
+	toggle() {
+		let clickEvent = new MouseEvent("click", {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
+		this.summary.dispatchEvent(clickEvent);
+	}
+
+	triggerClickToClose() {
+		if(this.summary && this.options.closeClickOutside) {
+			this.toggle();
+		}
+	}
+
+	clickHandler(event) {
+		event.preventDefault();
+	}
+
+	setClickHandlers(state) {
+		if (state) {
+			this.summary.removeEventListener('click', this.clickHandler, true);
+			console.log('add click handlers');
+
+		} else {
+			this.summary.addEventListener('click', this.clickHandler, true);
+			console.log('remove click handlers');
+		}
+	}
+
+	setState(setClickable) {
+		if( setClickable ) {
+			this.clickable = true;
+		} else {
+			this.clickable = false;
+		}
+
+		this.setClickHandlers(this.clickable);
+	}
+}
+
 class DetailsUtils extends HTMLElement {
 	constructor() {
 		super();
@@ -224,6 +336,9 @@ class DetailsUtils extends HTMLElement {
 			forceStateRestore: "force-restore",
 			toggleDocumentClass: "toggle-document-class",
 			closeClickOutsideButton: "data-du-close-click",
+			clickEnable: "click-enable",
+			clickDisable: "click-disable",
+			clickRestore: "click-restore",
 		};
 
 		this.options = {};
@@ -262,6 +377,9 @@ class DetailsUtils extends HTMLElement {
 		}
 		this.initialized = true;
 
+		this.options.clickEnable = this.getAttributeValue(this.attrs.clickEnable);
+		this.options.clickDisable = this.getAttributeValue(this.attrs.clickDisable);
+		this.options.clickRestore = this.getAttributeValue(this.attrs.clickRestore);
 		this.options.closeClickOutside = this.getAttributeValue(this.attrs.closeClickOutside);
 		this.options.closeEsc = this.getAttributeValue(this.attrs.closeEsc);
 		this.options.forceStateClose = this.getAttributeValue(this.attrs.forceStateClose);
@@ -275,12 +393,16 @@ class DetailsUtils extends HTMLElement {
 			let fs = new DetailsUtilsForceState(detail, this.options);
 			fs.init();
 
+			// override initial state based on viewport (if needed)
+			let clickable = new DetailsUtilsClickable(detail, this.options);
+			clickable.init();
+
 			if(this.hasAttribute(this.attrs.animate)) {
 				// animate the menus
 				new DetailsUtilsAnimateDetails(detail);
 			}
 		}
-
+		
 		this.bindCloseOnEsc(details);
 		this.bindClickoutToClose(details);
 
