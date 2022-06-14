@@ -304,11 +304,9 @@ class DetailsUtilsClickable {
 	setClickHandlers(state) {
 		if (state) {
 			this.summary.removeEventListener('click', this.clickHandler, true);
-			console.log('add click handlers');
 
 		} else {
 			this.summary.addEventListener('click', this.clickHandler, true);
-			console.log('remove click handlers');
 		}
 	}
 
